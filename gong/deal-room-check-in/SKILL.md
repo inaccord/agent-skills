@@ -9,7 +9,7 @@ Example prompt (input: `[CRM_ID]`):
 
 > Find the Accord for [CRM_ID]. Summarize which buyers have engaged recently, which next steps are overdue, and what I should do next.
 
-## Applies to all three skills
+## Working with Accord
 
 **Tools.** Accord's MCP server exposes four tools:
 
@@ -20,9 +20,9 @@ Example prompt (input: `[CRM_ID]`):
 | `mutate` | GraphQL mutations (only available when write access is on for the workspace) |
 | `introspect` | Look up types, fields, and arguments in the schema |
 
-Each skill names the exact queries and mutations to call. If an argument shape is unclear, call `introspect` with the type name (for example `CreateStepInput`) before writing.
+The steps below name the exact queries and mutations to call. If an argument shape is unclear, call `introspect` with the type name (for example `CreateStepInput`) before writing.
 
-**Call content comes from Gong.** Gong's agent reads the call and passes in the facts each skill lists under "Inputs from Gong". Accord's MCP does not return call transcripts.
+**Call content comes from Gong.** Gong's agent reads the call and passes in the facts listed under "Inputs from Gong" below. Accord's MCP does not return call transcripts.
 
 **Finding the deal room.** The rep may give an Accord link, an Accord ID, or a CRM opportunity ID. Don't ask for a CRM ID if you already have one of the others.
 
@@ -37,11 +37,7 @@ Each skill names the exact queries and mutations to call. If an argument shape i
   ```
 - None given: use the CRM opportunity linked to the Gong call. Ask the rep only if the call has no linked opportunity.
 
-**Rep review happens in Accord.** A new deal room is created unshared (`isDraft: true`). New steps the agent adds are seller-only (`internal: true`) until the rep makes them visible to the buyer.
-
-**Start every run with `whoami`.** If a needed permission is missing, stop and tell the rep which one.
-
-**Rep notifications.** Each skill returns a short summary to Gong. Gong's agent builder posts it to the rep in Slack.
+**What the buyer can see.** A room with `isDraft: true` hasn't been shared with the buyer yet, and steps with `internal: true` are seller-only.
 
 ## When to use
 
@@ -53,7 +49,7 @@ An Accord link, Accord ID, or CRM opportunity ID. Optionally, the date of the la
 
 ## Steps
 
-1. **`whoami`**: confirm the connection is a seller with read access. This skill never calls `mutate`.
+1. **`whoami`**: confirm the connection is a seller with read access. This skill never calls `mutate`. If read access is missing, stop and tell the rep.
 2. **Find the deal room** (see Finding the deal room). If there's no match, stop and tell the rep there's no Accord for this opportunity. If more than one matches, use the one with `isDraft: false`, then the most recently updated, and say so in the summary.
 3. **Pull engagement and the plan** in one query:
    ```graphql

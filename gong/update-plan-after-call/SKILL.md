@@ -9,7 +9,7 @@ Example prompt (input: `[CRM_ID]`):
 
 > Find the Accord for [CRM_ID]. Add the next steps we committed to on our latest call, with owners and due dates, and update any steps whose dates changed. Keep new steps internal for my review.
 
-## Applies to all three skills
+## Working with Accord
 
 **Tools.** Accord's MCP server exposes four tools:
 
@@ -20,9 +20,9 @@ Example prompt (input: `[CRM_ID]`):
 | `mutate` | GraphQL mutations (only available when write access is on for the workspace) |
 | `introspect` | Look up types, fields, and arguments in the schema |
 
-Each skill names the exact queries and mutations to call. If an argument shape is unclear, call `introspect` with the type name (for example `CreateStepInput`) before writing.
+The steps below name the exact queries and mutations to call. If an argument shape is unclear, call `introspect` with the type name (for example `CreateStepInput`) before writing.
 
-**Call content comes from Gong.** Gong's agent reads the call and passes in the facts each skill lists under "Inputs from Gong". Accord's MCP does not return call transcripts.
+**Call content comes from Gong.** Gong's agent reads the call and passes in the facts listed under "Inputs from Gong" below. Accord's MCP does not return call transcripts.
 
 **Finding the deal room.** The rep may give an Accord link, an Accord ID, or a CRM opportunity ID. Don't ask for a CRM ID if you already have one of the others.
 
@@ -37,11 +37,7 @@ Each skill names the exact queries and mutations to call. If an argument shape i
   ```
 - None given: use the CRM opportunity linked to the Gong call. Ask the rep only if the call has no linked opportunity.
 
-**Rep review happens in Accord.** A new deal room is created unshared (`isDraft: true`). New steps the agent adds are seller-only (`internal: true`) until the rep makes them visible to the buyer.
-
-**Start every run with `whoami`.** If a needed permission is missing, stop and tell the rep which one.
-
-**Rep notifications.** Each skill returns a short summary to Gong. Gong's agent builder posts it to the rep in Slack.
+**Rep review happens in Accord.** Steps the agent adds are seller-only (`internal: true`) until the rep makes them visible to the buyer.
 
 ## When to use
 
