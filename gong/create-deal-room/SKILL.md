@@ -49,7 +49,7 @@ After a discovery call on a CRM opportunity.
 
 ## Inputs from Gong
 
-- CRM opportunity ID and its fields (stage, amount, owner, owner role, custom fields)
+- CRM opportunity ID and its fields (stage, amount, owner, owner role, custom fields), if the call has one
 - Attendees with name, email, and role
 - Business case in the buyer's own words
 - Stated timeline
@@ -60,13 +60,13 @@ After a discovery call on a CRM opportunity.
 ## Steps
 
 1. **`whoami`**: confirm write access and permissions.
-2. **Check for an existing deal room** by `crmId`, if the call has a linked CRM opportunity. If one exists (for example, Accord created it automatically when the opportunity changed stage), do not create another. Fill that room using steps 6-9, then go to step 10. If there is no linked opportunity, skip this check and continue.
+2. **Check for an existing deal room** by `crmId`, if the call has a linked CRM opportunity. If one exists (for example, Accord created it automatically when the opportunity changed stage), do not create another. Fill that room using steps 6-9, then go to step 10. If there is no linked opportunity, ask the rep to confirm before going on: "This call has no linked CRM opportunity. Create the deal room without one?" If the rep gives a CRM ID, use it and run this check. If the rep confirms, continue without one. If the rep says no, stop.
 3. **Choose the playbook** (see below).
 4. **Create the deal room**: mutate `duplicateAccord` with `style: "from-template"`, the playbook's `accordId`, and `conditionSelections`.
    - 4b. **Get the new room's id.** If `duplicateAccord` does not return the new room's id, find it: query `accords(filter: { isTemplate: { equalTo: false }, createdFromTemplateId: { equalTo: "<playbook accordId>" }, createdAt: { greaterThanOrEqualTo: "<the current time minus 5 minutes, ISO 8601 UTC>" } })` with `id`, `opportunityName`, `createdAt`, and `isDraft`. Use the most recent result. If none comes back, stop and tell the rep the room may not have been created. Never call `duplicateAccord` a second time. Use this id for steps 5-9.
-5. **Link and keep unshared**: mutate `updateAccord` with `isDraft: true`, and with `crmId` set to the opportunity ID when there is one. If the call has no linked CRM opportunity, create the room unlinked and say so in the summary.
+5. **Link and keep unshared**: mutate `updateAccord` with `isDraft: true`, and with `crmId` set to the opportunity ID when there is one. If the rep confirmed in step 2 to go ahead without a CRM opportunity, leave `crmId` unset and say in the summary that the room isn't linked to the CRM yet.
 6. **Seed the plan**: for each committed next step, mutate `createStep` with a title, a due date, and an owner (the rep, or a buyer-side role such as Champion). If the playbook already has a matching step, update its due date with `updateStep` instead of adding a duplicate.
-7. **Seed the stakeholders**: for each attendee, mutate `createAccordMember`, then `assignWorkspacePlaceholder` to give them their role (Champion, Economic Buyer, and so on).
+7. **Seed the stakeholders**: for each attendee, mutate `createAccordMember`, then `assignWorkspacePlaceholder` with `shouldSendInvite: false` to give them their role (Champion, Economic Buyer, and so on).
 8. **Draft the business case**: mutate `upsertSectionById` with rich text built from the buyer's own words, the stated timeline, and the competitors mentioned.
 9. **Attach requested resources**: for each request, query `semanticLibraryResourceSearch(query: "<request>")`, then mutate `linkLibraryResources` with the best matches. If library search isn't available for the workspace, skip this step and list the requests in the summary.
 10. **Return to Gong**: the deal room link, the playbook used and why, and what was added.
@@ -91,5 +91,7 @@ A Slack message from Gong that the deal room is ready, linking to the draft in A
 ## Guardrails
 
 - Never share the deal room with the buyer (never set `isDraft: false`). The rep does that.
+- Never send buyer invites (always pass `shouldSendInvite: false`). The rep invites buyers when they share the room.
+- Never create a deal room without a CRM opportunity unless the rep confirmed it.
 - Only add people who were on the call.
 - Only add steps someone committed to on the call.
